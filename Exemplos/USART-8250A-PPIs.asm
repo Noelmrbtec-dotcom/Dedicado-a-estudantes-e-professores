@@ -18,7 +18,7 @@
 ;   - CPU Z80 (emulada)
 ;   - 2x PPI 8255 (mapeados em I/O)
 ;   - 1x USART 8250A (mapeada em I/O)
-;   - LED ou osciloscópio na saída serial (para ver os caracteres)
+;   - Terminal serial ou osciloscópio na saída serial (para ver os caracteres)
 ;***********************************************************************************
 
 ;***********************************************************************************
