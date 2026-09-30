@@ -19,7 +19,6 @@ Aqui você encontra:
   carregar no Proteus)
 - **Esquema do Proteus** para simulação
 - **Programas de exemplo em assembly Z80** para testar o emulador
-- **Documentação didática** sobre o Z80 e a arquitetura von Neumann
 
 **O código-fonte do emulador não está disponível publicamente.** 
 Este repositório disponibiliza apenas os binários e os exemplos, para 
