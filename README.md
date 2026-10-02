@@ -42,4 +42,24 @@ Este emulador permite que alunos e professores:
 5. **Testem conceitos de interrupção, I/O e temporização**
 
 ---
+O desenvolvimento do emulador Z80-PIC levou meses de trabalho, e a 
+documentação continua sendo refinada. Se este material foi útil para 
+você (ou para seus alunos), e você deseja contribuir voluntariamente 
+para que o projeto continue evoluindo, considere uma doação.
 
+**Não é obrigatório.** O projeto permanece livre e acessível para todos, 
+independentemente de qualquer contribuição.
+
+### Como contribuir
+
+🔹 **PIX:** 15481313855  
+
+### Outras formas de contribuir (sem dinheiro)
+
+• Compartilhar o projeto nas redes sociais  
+• Enviar feedback ou sugestões  
+• Reportar bugs ou problemas  
+• Citar o projeto em trabalhos acadêmicos  
+• Usar em sala de aula e contar como foi
+
+Toda contribuição — financeira ou não — é muito bem-vinda! 🙏
