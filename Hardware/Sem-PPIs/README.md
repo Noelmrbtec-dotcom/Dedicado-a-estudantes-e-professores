@@ -20,7 +20,7 @@ da família INM (`IND`, `INDR`, `INI`, `INIR`).
 
 ## 🧩 Componentes Utilizados
 
-- **CPU Z80** (emulada no Proteus)
+- **Z80-EMU** (emulada no Proteus)
 - **74LS373** — latch de 8 bits para a Porta B (entrada)
 - **74LS244** — buffer tri-state para as Portas A e C (saída)
 - **DIP switches** — entrada de dados para o latch
