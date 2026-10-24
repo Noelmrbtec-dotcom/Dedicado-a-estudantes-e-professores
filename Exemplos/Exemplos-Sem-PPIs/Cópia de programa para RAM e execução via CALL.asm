@@ -43,7 +43,7 @@ main:
     ; --- Execução ---
     ; Salta para o código original na ROM.
     ; Se quiser executar o código COPIADO na RAM, troque por: jp 8000h
-    jp programa_principal
+    jp 8000h; Ram ou Rom programa_principal;
 
 ; =================================================================================
 ; Bloco de código a ser copiado para a RAM (a partir daqui até fim_programa)
