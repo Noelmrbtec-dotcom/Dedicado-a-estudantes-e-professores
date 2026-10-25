@@ -77,7 +77,7 @@ instruções `IND`, `OTIR`, `OUTD` e `DAA`.
 
 **Motivo da não correção (ainda):** Os pinos de interrupção nativa do PIC18F6722 
 (INT0/INT1) estão **fisicamente ocupados** pelo barramento de endereços 
-(PORTB/PORTC) e controle (PORTF). Como já utilizamos o Timer0 para a NMI com 
+(PORTB/PORTC) e controle (PORTF). Como já utilizei o Timer0 para a NMI com 
 sucesso, a solução para a INT mascarada exigiria um segundo timer ou uma 
 reengenharia dos pinos. Isso fica como trabalho futuro para quem desejar 
 fidelidade total em `IM 0/1/2`.
