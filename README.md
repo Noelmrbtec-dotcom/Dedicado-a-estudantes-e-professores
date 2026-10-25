@@ -42,6 +42,39 @@ Este emulador permite que alunos e professores:
 5. **Testem conceitos de interrupção, I/O e temporização**
 
 ---
+   
+## ⚠️ Limitações Conhecidas
+
+### 1. Interrupções durante Instruções de Bloco (LDIR, CPIR, INIR, OTIR, etc.)
+
+O Z80-EMU utiliza **polling de pinos** no loop principal (`main()`). Instruções 
+de bloco são executadas como um loop interno em C (ex: `do { ldi(); } while (BC != 0)`). 
+
+**Consequência:** As interrupções (INT e NMI) **não são atendidas** durante a 
+execução dessas instruções. Elas só são processadas quando o loop principal 
+retorna ao `check_interrupts()`.
+
+**Comparação com o Z80 real:** O silício da Zilog testa os pinos INT/NMI **a cada 
+ciclo de máquina**, permitindo atender interrupções no meio de um `LDIR` (inclusive 
+no Edge Case onde `BC = 0`, que força 65.536 iterações). Emuladores baseados em 
+polling não replicam esse comportamento sem o uso de interrupções físicas.
+
+**Comparação com emuladores existentes (ex: Oshon Z80):** 
+Emuladores comerciais baseados em software (como o Oshon) rodam em um PC e 
+utilizam threads ou verificação instrução-por-instrução, o que lhes permite 
+simular interrupções durante loops de bloco. Por outro lado, o Z80-EMU roda em 
+um microcontrolador (PIC18F6722) em tempo real, onde a CPU fica bloqueada dentro 
+do loop em C. Apesar dessa limitação arquitetural, o Z80-EMU se mostrou **mais 
+fiel ao Z80 real do que o Oshon em outras frentes**, corrigindo bugs comerciais 
+presentes nas instruções `IND`, `OTIR`, `OUTD` e `DAA`.
+
+**Motivo da não correção:** Os pinos de interrupção nativa do PIC18F6722 
+(INT0/INT1) estão **fisicamente ocupados** pelo barramento de endereços 
+(PORTB/PORTC) e controle (PORTF). Utilizá-los para interrupção real comprometeria 
+toda a arquitetura de hardware já validada do emulador.
+
+---
+
 ## 💚 Contribuição voluntária
 
 O desenvolvimento do emulador Z80-PIC levou meses de trabalho, e a 
