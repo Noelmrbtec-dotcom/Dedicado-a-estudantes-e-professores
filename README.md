@@ -45,34 +45,42 @@ Este emulador permite que alunos e professores:
    
 ## ⚠️ Limitações Conhecidas
 
-### 1. Interrupções durante Instruções de Bloco (LDIR, CPIR, INIR, OTIR, etc.)
+### 1. Acionamento de Interrupções (IM 0, IM 1 e IM 2)
 
-O Z80-EMU utiliza **polling de pinos** no loop principal (`main()`). Instruções 
-de bloco são executadas como um loop interno em C (ex: `do { ldi(); } while (BC != 0)`). 
+O Z80-EMU agora utiliza **interrupção real de hardware** via Timer0 do PIC18F6722 
+(configurado como contador externo no pino RA4) para a NMI. Isso permite que 
+instruções de bloco (LDIR, CPIR, INIR, OTIR, etc.) sejam interrompidas e retomadas 
+corretamente, algo raro em emuladores baseados em PIC.
 
-**Consequência:** As interrupções (INT e NMI) **não são atendidas** durante a 
-execução dessas instruções. Elas só são processadas quando o loop principal 
-retorna ao `check_interrupts()`.
+**A limitação restante:** O pino de interrupção **mascarada (INT)** ainda utiliza 
+polling de software no loop principal (`main()`). Isso significa que, para os modos 
+`IM 0`, `IM 1` e `IM 2`, a interrupção só é detectada quando o Z80 retorna ao 
+`check_interrupts()`.
+
+**Consequência:** Se um programa Z80 estiver preso em um loop de bloco (ex: um 
+`LDIR` de 65.536 iterações) e precisar ser interrompido pelo pino `INT` (mascarado), 
+a interrupção só será atendida após o término da instrução de bloco. Para a **NMI**, 
+isso não ocorre, pois ela usa a interrupção de hardware do Timer0.
 
 **Comparação com o Z80 real:** O silício da Zilog testa os pinos INT/NMI **a cada 
-ciclo de máquina**, permitindo atender interrupções no meio de um `LDIR` (inclusive 
-no Edge Case onde `BC = 0`, que força 65.536 iterações). Emuladores baseados em 
-polling não replicam esse comportamento sem o uso de interrupções físicas.
+ciclo de máquina**. O Z80-EMU já faz isso para a NMI (via Timer0), mas ainda não 
+para a INT (que depende do polling).
 
 **Comparação com emuladores existentes (ex: Oshon Z80):** 
 Emuladores comerciais baseados em software (como o Oshon) rodam em um PC e 
 utilizam threads ou verificação instrução-por-instrução, o que lhes permite 
-simular interrupções durante loops de bloco. Por outro lado, o Z80-EMU roda em 
-um microcontrolador (PIC18F6722) em tempo real, onde a CPU fica bloqueada dentro 
-do loop em C. Apesar dessa limitação arquitetural, o Z80-EMU se mostrou **mais 
-fiel ao Z80 real do que o Oshon em outras frentes**, corrigindo bugs comerciais 
-presentes nas instruções `IND`, `OTIR`, `OUTD` e `DAA`.
+simular interrupções mascaradas durante loops de bloco. Por outro lado, o Z80-EMU 
+roda em um microcontrolador (PIC18F6722) em tempo real, e a INT ainda está no 
+modo polling. Apesar dessa limitação, o Z80-EMU se mostrou **mais fiel ao Z80 real 
+do que o Oshon em outras frentes**, corrigindo bugs comerciais presentes nas 
+instruções `IND`, `OTIR`, `OUTD` e `DAA`.
 
-**Motivo da não correção:** Os pinos de interrupção nativa do PIC18F6722 
+**Motivo da não correção (ainda):** Os pinos de interrupção nativa do PIC18F6722 
 (INT0/INT1) estão **fisicamente ocupados** pelo barramento de endereços 
-(PORTB/PORTC) e controle (PORTF). Utilizá-los para interrupção real comprometeria 
-toda a arquitetura de hardware já validada do emulador.
-
+(PORTB/PORTC) e controle (PORTF). Como já utilizamos o Timer0 para a NMI com 
+sucesso, a solução para a INT mascarada exigiria um segundo timer ou uma 
+reengenharia dos pinos. Isso fica como trabalho futuro para quem desejar 
+fidelidade total em `IM 0/1/2`.
 ---
 
 ## 💚 Contribuição voluntária
