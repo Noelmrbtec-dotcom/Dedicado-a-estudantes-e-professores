@@ -42,45 +42,56 @@ Este emulador permite que alunos e professores:
 5. **Testem conceitos de interrupção, I/O e temporização**
 
 ---
-   
+
+## 🆕 Interrupções por Hardware Real (INT e NMI)
+
+O Z80-EMU implementa **interrupções reais de hardware** usando o Timer0 do
+PIC18F6722 como contador externo no pino RA4. Os sinais de **INT** (RE3) e
+**NMI** (RE4) são combinados por uma porta AND (74LS08) e conectados ao RA4.
+
+### Como funciona
+
+```text
+INT (Z80, RE3) ──┐
+                 ├── 74LS08 (AND) ──→ RA4 (Timer0)
+NMI (Z80, RE4) ──┘
+
+
+- Quando **qualquer** interrupção é acionada, a saída da AND vai para 0.
+- O Timer0 detecta a borda de descida e gera uma **interrupção real** no PIC.
+- A ISR lê RE3 e RE4 para identificar a fonte (INT ou NMI).
+- O emulador pausa a execução, empilha o PC do Z80 e salta para o vetor
+  correto (`0x0038` para INT, `0x0066` para NMI).
+- Após `RETI`/`RETN`, o Z80 **retoma a execução exatamente de onde parou**.
+
+### O que foi validado
+
+- **8 instruções de bloco** (`LDIR`, `LDDR`, `CPIR`, `CPDR`, `INIR`, `INDR`,
+  `OTIR`, `OTDR`) interrompidas por **INT e NMI reais** durante a execução.
+- **Contexto preservado:** `BC`, `HL`, `DE` e flags não são corrompidos.
+- **Fidelidade ao Z80 real:** o comportamento é idêntico ao silício da Zilog,
+  que testa os pinos INT/NMI a cada ciclo de máquina.
+
+---
+
 ## ⚠️ Limitações Conhecidas
 
-### 1. Acionamento de Interrupções (IM 0, IM 1 e IM 2)
+### 1. Versões de Binário (Novo vs. Antigo)
 
-O Z80-EMU agora utiliza **interrupção real de hardware** via Timer0 do PIC18F6722 
-(configurado como contador externo no pino RA4) para a NMI. Isso permite que 
-instruções de bloco (LDIR, CPIR, INIR, OTIR, etc.) sejam interrompidas e retomadas 
-corretamente, algo raro em emuladores baseados em PIC.
+A versão **nova** (`main-rom.hex`) implementa INT e NMI por hardware real.
+A versão **antiga** (`old-main-rom.hex`) usava polling de software para a NMI
+e é mantida apenas para referência histórica.
 
-**A limitação restante:** O pino de interrupção **mascarada (INT)** ainda utiliza 
-polling de software no loop principal (`main()`). Isso significa que, para os modos 
-`IM 0`, `IM 1` e `IM 2`, a interrupção só é detectada quando o Z80 retorna ao 
-`check_interrupts()`.
+**Recomendação:** use sempre o `main-rom.hex` com o esquema do Proteus que
+inclui a porta AND (`...NMI-INT-HARDWARE.DSN`).
 
-**Consequência:** Se um programa Z80 estiver preso em um loop de bloco (ex: um 
-`LDIR` de 65.536 iterações) e precisar ser interrompido pelo pino `INT` (mascarado), 
-a interrupção só será atendida após o término da instrução de bloco. Para a **NMI**, 
-isso não ocorre, pois ela usa a interrupção de hardware do Timer0.
+### 2. Outras Observações
 
-**Comparação com o Z80 real:** O silício da Zilog testa os pinos INT/NMI **a cada 
-ciclo de máquina**. O Z80-EMU já faz isso para a NMI (via Timer0), mas ainda não 
-para a INT (que depende do polling).
+- O emulador roda a ~100 kHz com debug ativado (para fins didáticos) e
+  ~4 MHz sem debug (versão interna, não distribuída).
+- O foco do projeto é o **ensino** e a **visualização do barramento**,
+  não a execução em alta velocidade.
 
-**Comparação com emuladores existentes (ex: Oshon Z80):** 
-Emuladores comerciais baseados em software (como o Oshon) rodam em um PC e 
-utilizam threads ou verificação instrução-por-instrução, o que lhes permite 
-simular interrupções mascaradas durante loops de bloco. Por outro lado, o Z80-EMU 
-roda em um microcontrolador (PIC18F6722) em tempo real, e a INT ainda está no 
-modo polling. Apesar dessa limitação, o Z80-EMU se mostrou **mais fiel ao Z80 real 
-do que o Oshon em outras frentes**, corrigindo bugs comerciais presentes nas 
-instruções `IND`, `OTIR`, `OUTD` e `DAA`.
-
-**Motivo da não correção (ainda):** Os pinos de interrupção nativa do PIC18F6722 
-(INT0/INT1) estão **fisicamente ocupados** pelo barramento de endereços 
-(PORTB/PORTC) e controle (PORTF). Como já utilizei o Timer0 para a NMI com 
-sucesso, a solução para a INT mascarada exigiria um segundo timer ou uma 
-reengenharia dos pinos. Isso fica como trabalho futuro para quem desejar 
-fidelidade total em `IM 0/1/2`.
 ---
 
 ## 💚 Contribuição voluntária
