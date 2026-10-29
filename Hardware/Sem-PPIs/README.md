@@ -14,9 +14,9 @@ interrupção (INT e NMI).
 
 | Arquivo | Descrição | Binário Compatível |
 |---------|-----------|-------------------|
-| `Z80-PIC18F-EMU-MAPEADO-POR-MREQ+ROM-M2-VETORES-INT-HARDWARE.DSN` | **Esquema NOVO** — NMI por hardware real (Timer0 no pino RA4) | `main-rom.hex` |
+| `Z80-PIC18F-EMU-MAPEADO-POR-MREQ+ROM-M2-VETORES-NMI-INT-HARDWARE.DSN` | **Esquema NOVO** — INT e NMI por hardware real (porta AND + Timer0 no pino RA4) | `main-rom.hex` |
 | `Z80-PIC18F-EMU-MAPEADO-POR-MREQ+ROM-M2-VETORES.DSN` | Esquema ANTIGO — NMI por polling (pino RE4) | `old-main-rom.hex` |
-| `main-rom.hex` | **Binário ATUALIZADO** — NMI por hardware real (Timer0 no pino RA4). Interrompe instruções de bloco (LDIR, CPIR, OTIR, etc.) | `...INT-HARDWARE.DSN` |
+| `main-rom.hex` | **Binário ATUALIZADO** — INT e NMI por hardware real (porta AND + Timer0 no RA4). Interrompe instruções de bloco (LDIR, CPIR, OTIR, etc.) | `...NMI-INT-HARDWARE.DSN` |
 | `old-main-rom.hex` | Binário ANTIGO (legado) — NMI por polling de software no pino **RE4** | `...VETORES.DSN` |
 
 ---
@@ -27,13 +27,13 @@ Para o emulador funcionar corretamente, **use o binário com o esquema correspon
 
 | Se você quer usar... | Carregue o binário... | No esquema... |
 |----------------------|----------------------|---------------|
-| **NMI por Hardware Real** (novo) | `main-rom.hex` | `Z80-PIC18F-EMU-MAPEADO-POR-MREQ+ROM-M2-VETORES-INT-HARDWARE.DSN` |
+| **INT e NMI por Hardware Real** (novo) | `main-rom.hex` | `Z80-PIC18F-EMU-MAPEADO-POR-MREQ+ROM-M2-VETORES-NMI-INT-HARDWARE.DSN` |
 | **NMI por Polling** (antigo) | `old-main-rom.hex` | `Z80-PIC18F-EMU-MAPEADO-POR-MREQ+ROM-M2-VETORES.DSN` |
 
-**Misturar esquema novo com binário antigo (ou vice-versa) NÃO funciona**, porque o pino do NMI está fisicamente diferente:
+**Misturar esquema novo com binário antigo (ou vice-versa) NÃO funciona**, porque a pinagem das interrupções é fisicamente diferente:
 
-- **Esquema novo:** NMI conectado ao **RA4** (Timer0).
-- **Esquema antigo:** NMI conectado ao **RE4**.
+- **Esquema novo:** INT (RE3) e NMI (RE4) são combinadas por uma porta AND (74LS08) e a saída vai para o **RA4** (Timer0).
+- **Esquema antigo:** NMI conectado diretamente ao **RE4** (polling).
 
 Se você carregar o `old-main-rom.hex` no esquema novo, o botão de NMI estará no pino errado, e a interrupção **nunca será detectada**.
 
@@ -41,9 +41,10 @@ Se você carregar o `old-main-rom.hex` no esquema novo, o botão de NMI estará 
 
 ## 🆕 O que mudou no novo binário (`main-rom.hex`)
 
-- **NMI por Hardware Real:** O Timer0 do PIC18F6722 foi configurado como contador externo no pino RA4. O botão de NMI agora gera uma interrupção real do PIC, que interrompe até loops de instruções de bloco do Z80.
-- **Interrupção em Blocos:** As 8 instruções de bloco (`LDIR`, `LDDR`, `CPIR`, `CPDR`, `INIR`, `INDR`, `OTIR`, `OTDR`) foram validadas com NMI real durante a execução.
-- **Retomada de Contexto:** Após o `RETN`, o Z80 retoma a instrução de bloco exatamente de onde parou, sem perder o contador `BC` ou os ponteiros `HL`/`DE`.
+- **INT e NMI por Hardware Real:** Os sinais de INT (RE3) e NMI (RE4) são combinados por uma porta AND (74LS08), e a saída vai para o pino **RA4** (Timer0). Quando qualquer uma das interrupções é acionada, o Timer0 gera uma interrupção real no PIC.
+- **Identificação da Fonte:** A ISR do Timer0 lê os pinos originais (RE3 e RE4) para identificar qual interrupção disparou.
+- **Interrupção em Blocos:** As 8 instruções de bloco (`LDIR`, `LDDR`, `CPIR`, `CPDR`, `INIR`, `INDR`, `OTIR`, `OTDR`) foram validadas com INT e NMI reais durante a execução.
+- **Retomada de Contexto:** Após o `RETI`/`RETN`, o Z80 retoma a instrução de bloco exatamente de onde parou, sem perder o contador `BC` ou os ponteiros `HL`/`DE`.
 
 ## 📜 Sobre o binário antigo (`old-main-rom.hex`)
 
@@ -51,7 +52,7 @@ Este binário é mantido **apenas para referência histórica**. Nele, a NMI é 
 - A interrupção **não** é atendida durante instruções de bloco.
 - O botão precisa ser pressionado por mais tempo (mais de 1 segundo) para ser detectado.
 
-**Para novos testes e desenvolvimento, use sempre o `main-rom.hex` com o esquema `...INT-HARDWARE.DSN`.**
+**Para novos testes e desenvolvimento, use sempre o `main-rom.hex` com o esquema `...NMI-INT-HARDWARE.DSN`.**
 
 ---
 
@@ -63,26 +64,16 @@ Este binário é mantido **apenas para referência histórica**. Nele, a NMI é 
 | Porta B | `02h` | ENTRADA | Chaves / latch |
 | Porta C | `10h` | SAÍDA | LEDs |
 
-## 🔧 Pinagem do NMI
+## 🔧 Pinagem das Interrupções
 
 | Esquema | Pino do PIC | Tipo de Interrupção |
 |---------|-------------|---------------------|
-| `...INT-HARDWARE.DSN` (novo) | **RA4** (Timer0) | Hardware real (Timer0 como contador externo) |
+| `...NMI-INT-HARDWARE.DSN` (novo) | **RA4** (Timer0) | Hardware real (porta AND + Timer0 como contador externo) |
 | `...VETORES.DSN` (antigo) | **RE4** | Polling de software no `main()` |
 
-## 🧩 Componentes Utilizados
+### Lógica da Porta AND (Esquema Novo)
 
-- **Z80-EMU** (emulada no Proteus)
-- **74LS244** — latch de 8 bits para a Porta B (entrada)
-- **74LS273** — buffer tri-state para as Portas A e C (saída)
-- **DIP switches** — entrada de dados para o latch
-- **LEDs** — visualização das saídas
-- **Decodificador de endereço** (74LS138 ou similar)
-
-## 📌 Recomendação
-
-- **Para produção e novos testes:** use `main-rom.hex` + `...INT-HARDWARE.DSN`.
-- **Para comparação histórica:** use `old-main-rom.hex` + `...VETORES.DSN`.
-
-**Não misture os arquivos entre as duas configurações.**
-
+```text
+INT (Z80, RE3) ──┐
+                 ├── 74LS08 (AND) ──→ RA4 (Timer0)
+NMI (Z80, RE4) ──┘
