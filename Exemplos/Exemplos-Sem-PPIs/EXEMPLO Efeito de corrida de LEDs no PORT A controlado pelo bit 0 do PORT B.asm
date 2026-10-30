@@ -2,7 +2,6 @@
 ; EXEMPLO 11: Corrida de LEDs no PORT A controlada pelo bit 0 do PORT B
 ; Autor: Marcos Roberto Braga
 ; Aluno: Pedro Henrique C. Braga
-; Plataforma: Z80-EMU (PIC18F6722)
 ;
 ; OBJETIVO:
 ;   Demonstrar leitura de porta de entrada (PORT B), teste de bit (BIT),
