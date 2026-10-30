@@ -6,8 +6,8 @@
 ![Completeness](https://img.shields.io/badge/Completeness-100%25-success)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
----
 
+```text
 ## 📖 Sobre este repositório
 
 Este repositório é dedicado ao **ensino de arquitetura de computadores** 
@@ -51,7 +51,7 @@ PIC18F6722 como contador externo no pino RA4. Os sinais de **INT** (RE3) e
 
 ### Como funciona
 
-```text
+
 INT (Z80, RE3) ──┐
                  ├── 74LS08 (AND) ──→ RA4 (Timer0)
 NMI (Z80, RE4) ──┘
