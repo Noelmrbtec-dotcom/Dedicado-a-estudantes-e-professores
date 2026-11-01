@@ -6,7 +6,7 @@
 ; OBJETIVO:
 ;   Demonstrar a cópia de um bloco de código da ROM para a RAM usando LDIR,
 ;   a execução de sub-rotinas encadeadas via CALL/RET e o reinício do programa
-;   através de um "software reset" pós-HALT.
+;   através de um "NMI reset" pós-HALT.
 ;
 ; COMO FUNCIONA:
 ;   1. O programa principal em ROM (main) configura a pilha e usa o LDIR
