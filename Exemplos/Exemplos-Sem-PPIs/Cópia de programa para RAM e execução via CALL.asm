@@ -1,0 +1,112 @@
+; =================================================================================
+; Exemplo: Cópia de programa para RAM, execução via CALL e Auto-Reset
+; Autor: Marcos Roberto Braga
+; Aluno: Pedro Henrique Cerqueira Braga
+;
+; OBJETIVO:
+;   Demonstrar a cópia de um bloco de código da ROM para a RAM usando LDIR,
+;   a execução de sub-rotinas encadeadas via CALL/RET e o reinício do programa
+;   através de um "NMI reset" pós-HALT.
+;
+; COMO FUNCIONA:
+;   1. O programa principal em ROM (main) configura a pilha e usa o LDIR
+;      para copiar o bloco "programa_principal" até "fim_programa" para a
+;      RAM no endereço 8000h.
+;   2. Em seguida, salta para o código copiado.
+;   3. O código na RAM executa uma sequência de chamadas (CALL) a sub-rotinas.
+;   4. Cada sub-rotina escreve um valor em uma porta (A ou C) e retorna (RET).
+;   5. O programa termina com HALT.
+;   6. Quando uma interrupção (ex: NMI) ocorre, o Z80 sai do HALT e executa
+;      o CALL logo abaixo, reiniciando o programa de forma limpa.
+;
+; RESULTADO ESPERADO:
+;   - Porta A (01h): recebe AAh, depois 81h , depois FFh .
+;   - Porta C (10h): recebe 44h, depois 33h , depois 88h .
+; =================================================================================
+
+porta    = 01h             ; Porta A (SAÍDA)
+portb    = 02h             ; Porta B (SAÍDA) - não usada neste exemplo
+portc    = 10h             ; Porta C (SAÍDA)
+
+    org 0000h              ; Vetor de RESET
+    jp main                ; Início
+
+    org 0066h              ; Vetor de NMI
+    retn                   ; Retorna se ocorrência.
+
+    org 0030h              ; Programa principal (na ROM)
+main:
+    ; --- Configuração e Cópia para RAM ---
+    ld sp, 0FFFFh          ; SP = topo da RAM (pilha segura)
+    ld hl, programa_principal  ; HL = origem (endereço na ROM)
+    ld de, 8000h               ; DE = destino (endereço na RAM)
+    ld bc, fim_programa - programa_principal ; BC = tamanho do bloco
+    ldir                       ; Copia bloco de (HL) para (DE) até BC=0
+
+    ; --- Execução ---
+    ; Salta para o código original na ROM.
+    ; Se quiser executar o código COPIADO na RAM, troque por: jp 8000h
+    jp 8000h; Ram ou Rom programa_principal;
+
+; =================================================================================
+; Bloco de código a ser copiado para a RAM (a partir daqui até fim_programa)
+; =================================================================================
+programa_principal:
+    call teste_1           ; Chama a sub-rotina teste_1
+    call teste_2           ; Chama a sub-rotina teste_2
+    halt                   ; Para a CPU (aguarda interrupção)
+    call programa_principal; Auto-Reset: reinicia o fluxo se sair do HALT
+
+; ---------------------------------------------------------------------------------
+; Sub-rotina teste_1: Escreve AAh na Porta A
+; ---------------------------------------------------------------------------------
+teste_1:
+    ld a, 0AAh             ; A = AAh
+    out (porta), a         ; Porta A = AAh
+    ret                    ; Retorna
+
+; ---------------------------------------------------------------------------------
+; Sub-rotina teste_2: Escreve 81h na Porta A e chama teste_3
+; ---------------------------------------------------------------------------------
+teste_2:
+    ld a, 81h              ; A = 81h
+    out (porta), a         ; Porta A = 81h
+    call teste_3           ; Chama a sub-rotina teste_3
+    ret                    ; Retorna
+
+; ---------------------------------------------------------------------------------
+; Sub-rotina teste_3: Escreve 44h na Porta C e chama teste_4
+; ---------------------------------------------------------------------------------
+teste_3:
+    ld a, 44h              ; A = 44h
+    out (portc), a         ; Porta C = 44h
+    call teste_4           ; Chama a sub-rotina teste_4
+    ret                    ; Retorna
+
+; ---------------------------------------------------------------------------------
+; Sub-rotina teste_4: Escreve FFh na Porta A e chama teste_5
+; ---------------------------------------------------------------------------------
+teste_4:
+    ld a, 0FFh             ; A = FFh
+    out (porta), a         ; Porta A = FFh
+    call teste_5           ; Chama a sub-rotina teste_5
+    ret                    ; Retorna
+; ---------------------------------------------------------------------------------
+; Sub-rotina teste_5: Escreve 33h na Porta C e chama teste_6
+; ---------------------------------------------------------------------------------
+teste_5:
+    ld a, 033h             ; A = 33h
+    out (portc), a         ; Porta C = 33h
+    call teste_6           ; Chama a sub-rotina teste_6
+    ret                    ; Retorna
+; ---------------------------------------------------------------------------------
+; Sub-rotina teste_6: Escreve 88h na Porta C e retorna
+; ---------------------------------------------------------------------------------
+teste_6:
+    ld a, 088h             ; A = 88h
+    out (portc), a         ; Porta C = 88h
+    ret                    ; Retorna
+
+fim_programa:              ; Marca o fim do bloco para o cálculo do tamanho (LDIR)
+
+    end
