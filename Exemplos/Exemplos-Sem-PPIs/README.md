@@ -9,6 +9,14 @@ usando latches discretos para as portas de entrada e saída.
 Demonstrar o funcionamento das instruções do Z80 que dependem de
 portas de I/O, sem a limitação do modelo da PPI 8255 em simuladores.
 
+## 💾 Mapa de Memória Principal
+
+| Componente | Endereço | Tamanho | Descrição |
+|------------|----------|---------|-----------|
+| **ROM** | `0000h` - `7FFFh` | 32 KB | Programa e vetores (firmware) |
+| **RAM** | `8000h` - `FFFFh` | 32 KB | Dados, pilha e variáveis |
+
+
 ## 🔌 Mapeamento de I/O
 
 | Porta | Endereço | Direção |
