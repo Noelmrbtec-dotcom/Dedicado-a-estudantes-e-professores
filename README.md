@@ -106,7 +106,8 @@ independentemente de qualquer contribuição.
 
 ### Como contribuir
 
-🔹 **PIX:** 15481313855  
+🔹 **PIX:** 15481313855
+🔹 **PayPal:** noelmrb_tec@yahoo.com 
 
 ### Outras formas de contribuir (sem dinheiro)
 
